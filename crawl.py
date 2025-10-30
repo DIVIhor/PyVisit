@@ -1,8 +1,43 @@
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import urljoin, urlparse, ParseResult
 
 from bs4 import BeautifulSoup as BS
 from bs4._typing import _AtMostOneElement
-from bs4.element import Tag
+from bs4.element import PageElement, Tag, ResultSet
+
+
+PARSER: str = "lxml"
+
+
+def get_urls_from_html(html: str, base_url: str) -> list[str]:
+    """Find all anchors in the HTML and extract their references.
+    Return a list of un-normalized URLs.
+    """
+    soup: BS = BS(html, PARSER)
+    anchors: ResultSet[PageElement] = soup.find_all("a")
+    links: list[str] = []
+    for a in anchors:
+        if isinstance(a, Tag):
+            url: str = str(a.get("href", ""))
+            parsed_url: ParseResult = urlparse(url)
+            links.append(urljoin(base_url, parsed_url.path))
+
+    return links
+
+
+def get_images_from_html(html: str, base_url: str) -> list[str]:
+    """Find all image tags in the HTML and extract their sources.
+    Return a list of un-normalized URLs.
+    """
+    soup: BS = BS(html, PARSER)
+    images: ResultSet[PageElement] = soup.find_all("img")
+    links: list[str] = []
+    for img in images:
+        if isinstance(img, Tag):
+            url: str = str(img.get("src", ""))
+            parsed_url: ParseResult = urlparse(url)
+            links.append(urljoin(base_url, parsed_url.path))
+
+    return links
 
 
 def normalize_url(url: str) -> str:
@@ -12,27 +47,20 @@ def normalize_url(url: str) -> str:
 
     return normalized_url.lower()
 
-def extract_text_from_tag(tag: _AtMostOneElement) -> str:
-    """Check if the `tag` is of the correct type and extract inner text,
-    trimming any spaces
-    """
-    if isinstance(tag, Tag):
-        return tag.get_text(strip=True)
-    
-    return ""
 
 def get_h1_from_html(html: str) -> str:
     """Extract heading text from the HTML"""
-    soup: BS = BS(html, "lxml")
+    soup: BS = BS(html, PARSER)
     heading: str = ""
     h1 = soup.find("h1")
     heading = extract_text_from_tag(h1)
 
     return heading
 
+
 def get_first_paragraph_from_html(html: str) -> str:
     """Extract text from the first paragraph of the HTML"""
-    soup: BS = BS(html, "lxml")
+    soup: BS = BS(html, PARSER)
     paragraph: str = ""
     main = soup.find("main")
 
@@ -47,3 +75,13 @@ def get_first_paragraph_from_html(html: str) -> str:
         paragraph = extract_text_from_tag(p)
 
     return paragraph
+
+
+def extract_text_from_tag(tag: _AtMostOneElement) -> str:
+    """Check if the `tag` is of the correct type and extract inner text,
+    trimming any spaces
+    """
+    if isinstance(tag, Tag):
+        return tag.get_text(strip=True)
+
+    return ""
