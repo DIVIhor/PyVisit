@@ -8,6 +8,25 @@ from bs4.element import PageElement, Tag, ResultSet
 PARSER: str = "lxml"
 
 
+def extract_page_data(html: str, page_url: str) -> dict[str, str | list[str]]:
+    """Extract and return a dictionary with the following parameters:
+    - `url` - current URL
+    - `h1` - main heading text
+    - `first_paragraph` - text block from the first paragraph
+    - `outgoing_links` - a list of URLs from anchors
+    - `image_urls` - a list of URLs from images
+    """
+    page_data: dict[str, str | list[str]] = {
+        "url": page_url,
+        "h1": get_h1_from_html(html),
+        "first_paragraph": get_first_paragraph_from_html(html),
+        "outgoing_links": get_urls_from_html(html, page_url),
+        "image_urls": get_images_from_html(html, page_url),
+    }
+
+    return page_data
+
+
 def get_urls_from_html(html: str, base_url: str) -> list[str]:
     """Find all anchors in the HTML and extract their references.
     Return a list of un-normalized URLs.
@@ -38,14 +57,6 @@ def get_images_from_html(html: str, base_url: str) -> list[str]:
             links.append(urljoin(base_url, parsed_url.path))
 
     return links
-
-
-def normalize_url(url: str) -> str:
-    """Normalize received URL to format HOST/PATH"""
-    parsed_url: ParseResult = urlparse(url)
-    normalized_url = f"{parsed_url.netloc}{parsed_url.path.removesuffix('/')}"
-
-    return normalized_url.lower()
 
 
 def get_h1_from_html(html: str) -> str:
@@ -85,3 +96,13 @@ def extract_text_from_tag(tag: _AtMostOneElement) -> str:
         return tag.get_text(strip=True)
 
     return ""
+
+
+def normalize_url(url: str) -> str:
+    """Normalize received URL to format HOST/PATH"""
+    parsed_url: ParseResult = urlparse(url)
+    normalized_url: str = (
+        f"{parsed_url.netloc}{parsed_url.path.removesuffix('/')}"
+    )
+
+    return normalized_url.lower()

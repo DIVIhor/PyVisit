@@ -6,6 +6,7 @@ from crawl import (
     get_first_paragraph_from_html,
     get_urls_from_html,
     get_images_from_html,
+    extract_page_data,
 )
 
 
@@ -190,6 +191,81 @@ class TestCrawl(unittest.TestCase):
         actual: list[str] = get_images_from_html(html, self.abs_url_https)
         expected: list[str] = []
         self.assertListEqual(actual, expected)
+
+    # Page data extraction
+
+    def test_extract_page_data_one_el_per_tag(self):
+        h1: str = self.h1_template.format(self.expected_h1_text)
+        p: str = self.p_template.format(self.expected_p_text)
+        a: str = self.a_template.format(self.path)
+        img: str = self.img_template.format(self.rel_img_url)
+        content: str = f"{h1}\n{p}\n{a}\n{img}"
+        html: str = self.html_template.format(content=content)
+
+        actual: dict[str, str | list[str]] = extract_page_data(
+            html, self.abs_url_https
+        )
+        expected: dict[str, str | list[str]] = {
+            "url": self.abs_url_https,
+            "h1": self.expected_h1_text,
+            "first_paragraph": self.expected_p_text,
+            "outgoing_links": [self.abs_url_with_path],
+            "image_urls": [self.abs_img_url],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_extract_page_data_partial_data(self):
+        h1: str = self.h1_template.format(self.expected_h1_text)
+        a: str = self.a_template.format(self.path)
+        content: str = f"{h1}\n{a}"
+        html: str = self.html_template.format(content=content)
+
+        actual: dict[str, str | list[str]] = extract_page_data(
+            html, self.abs_url_https
+        )
+        expected: dict[str, str | list[str]] = {
+            "url": self.abs_url_https,
+            "h1": self.expected_h1_text,
+            "first_paragraph": "",
+            "outgoing_links": [self.abs_url_with_path],
+            "image_urls": [],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_extract_page_data_main_section(self):
+        p1: str = self.p_template.format("Some unnecessary text")
+        p2: str = self.p_template.format(self.expected_p_text)
+        h1: str = self.h1_template.format(self.expected_h1_text)
+        main: str = self.main_template.format(f"{h1}\n{p2}")
+        content: str = f"{p1}\n{main}"
+        html: str = self.html_template.format(content=content)
+
+        actual: dict[str, str | list[str]] = extract_page_data(
+            html, self.abs_url_https
+        )
+        expected: dict[str, str | list[str]] = {
+            "url": self.abs_url_https,
+            "h1": self.expected_h1_text,
+            "first_paragraph": self.expected_p_text,
+            "outgoing_links": [],
+            "image_urls": [],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_extract_page_data_no_elements(self):
+        html: str = self.html_template.format(content="")
+
+        actual: dict[str, str | list[str]] = extract_page_data(
+            html, self.abs_url_https
+        )
+        expected: dict[str, str | list[str]] = {
+            "url": self.abs_url_https,
+            "h1": "",
+            "first_paragraph": "",
+            "outgoing_links": [],
+            "image_urls": [],
+        }
+        self.assertDictEqual(actual, expected)
 
 
 if __name__ == "__main__":
