@@ -1,6 +1,6 @@
 import sys
 
-from crawl import get_html
+from crawl import crawl_page
 
 
 def main():
@@ -15,13 +15,10 @@ def main():
     print(f"starting crawl of: {(base_url := sys.argv[1])}")
 
     # fetch HTML
-    try:
-        html: str = get_html(base_url)
-    except Exception as e:
-        print(f"Error fetching HTML from {base_url}: {str(e)}")
-        sys.exit(1)
-
-    print(html)
+    page_data: dict[str, dict[str, str | list[str]]] = crawl_page(base_url)
+    print(f"Found {len(page_data)} pages:")
+    for page in page_data.values():
+        print(f"- {page['url']}: {len(page['outgoing_links'])} outgoing links")
 
 
 if __name__ == "__main__":

@@ -132,3 +132,42 @@ def get_html(url: str) -> str:
         )
 
     return resp.text
+
+
+def crawl_page(
+    base_url: str,
+    current_url: str | None = None,
+    page_data: dict[str, dict[str, str | list[str]]] | None = None,
+) -> dict[str, dict[str, str | list[str]]]:
+    """Recursively traverse found URLs"""
+    # manage missing parts
+    if current_url is None:
+        current_url = base_url
+    if page_data is None:
+        page_data = {}
+
+    # make sure the current url is on the same domain as the base url
+    if urlparse(current_url).netloc != urlparse(base_url).netloc:
+        return page_data
+    # ignore already crawled pages
+    if (normalized_url := normalize_url(current_url)) in page_data:
+        return page_data
+
+    # retrieve the HTML
+    print(f"crawling: {current_url}")
+    try:
+        html: str = get_html(current_url)
+    except Exception as e:
+        print(f"error crawling {current_url}: {e}")
+        return page_data
+
+    # extract and store page data
+    page_data[normalized_url] = extract_page_data(html, current_url)
+
+    # crawl each URL on the page
+    for url in page_data[normalized_url]["outgoing_links"]:
+        page_data = crawl_page(
+            base_url=base_url, current_url=url, page_data=page_data
+        )
+
+    return page_data
