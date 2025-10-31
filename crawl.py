@@ -4,6 +4,9 @@ from bs4 import BeautifulSoup as BS
 from bs4._typing import _AtMostOneElement
 from bs4.element import PageElement, Tag, ResultSet
 
+import requests
+from requests import Response
+
 
 PARSER: str = "lxml"
 
@@ -106,3 +109,26 @@ def normalize_url(url: str) -> str:
     )
 
     return normalized_url.lower()
+
+
+def get_html(url: str) -> str:
+    """Send GET request to `url` and return its HTML or raise an exception"""
+    user_agent: str = "BootCrawler/1.0"
+
+    # send GET request
+    try:
+        resp: Response = requests.get(url, headers={"User-Agent": user_agent})
+    except Exception as e:
+        raise Exception(f"network error: {e}")
+
+    # catch errors
+    if (resp_code := resp.status_code) >= 400:
+        raise Exception(f"server responded with error: '{resp_code}'")
+    if not (content_type := resp.headers.get("content-type", "")).startswith(
+        "text/html"
+    ):
+        raise Exception(
+            f"server responded with unexpected content-type: '{content_type}'"
+        )
+
+    return resp.text
