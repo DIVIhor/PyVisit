@@ -2,6 +2,7 @@ import asyncio
 import sys
 
 from async_crawl import crawl_site_async
+from csv_report import write_csv_report
 
 from config import MAX_CONCURRENCY, MAX_PAGES_TO_CRAWL
 
@@ -25,13 +26,15 @@ async def main():
 
     print(f"starting crawl of: {(base_url := sys.argv[1])}")
 
-    # fetch HTML
+    # crawl website
     page_data: dict[str, dict[str, str | list[str]]] = await crawl_site_async(
         base_url, max_concurrency, max_pages_to_crawl
     )
-    print("\n", f"Found {len(page_data)} pages:")
-    for page in page_data.values():
-        print(f"- {page['url']}: {len(page['outgoing_links'])} outgoing links")
+
+    print("\n", f"Crawling complete. Found {len(page_data)} pages.")
+
+    # save crawled data
+    write_csv_report(page_data)
 
 
 if __name__ == "__main__":
