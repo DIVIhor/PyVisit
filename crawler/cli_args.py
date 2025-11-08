@@ -19,7 +19,7 @@ def create_parser() -> ArgumentParser:
     parser = argparse.ArgumentParser()
 
     # add a positional URL parameter
-    parser.add_argument("url")
+    parser.add_argument("url", help="root URL of the website")
 
     # synchronous mode
     parser.add_argument(
@@ -34,31 +34,35 @@ def create_parser() -> ArgumentParser:
         "-p",
         "--page-limit",
         type=int,
-        help="set a limit for pages to crawl, integer",
+        help="the maximum number of pages to crawl, integer (default is 10)",
     )
     # concurrency limit
     parser.add_argument(
         "-c",
         "--concurrency",
         type=int,
-        help="set a limit for concurrent requests, integer",
+        help="the maximum number of concurrent requests, integer (default is 3)",
     )
 
     # reporting parameters
     report_group = parser.add_argument_group()
     report_group.add_argument(
-        "-v", "--verbose", help="print report in CLI", action="store_true"
-    )
-    report_group.add_argument(
-        "--csv",
-        help="write report in CSV file, optionally takes file name, 'report' by default",
+        "-v",
+        "--verbose",
+        help="display a simplified report in the CLI",
         action="store_true",
     )
     report_group.add_argument(
-        "--json", help="write report in JSON file", action="store_true"
+        "--csv",
+        help="write report to a CSV file",
+        action="store_true",
     )
     report_group.add_argument(
-        "--fname", help="specify a file name to write a report to"
+        "--json", help="write report to a JSON file", action="store_true"
+    )
+    report_group.add_argument(
+        "--fname",
+        help="specify a file name to write a report to (default is `report`)",
     )
 
     return parser
