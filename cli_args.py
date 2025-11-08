@@ -3,8 +3,11 @@ from argparse import ArgumentParser
 
 
 def create_parser() -> ArgumentParser:
-    """Create and return an argument parser with the following parameters
+    """Create and return a CLI argument parser with the following parameters
     - `url` - URL to crawl to, a required positional parameter
+    - `-s`, `--sync` - synchronous mode, a flag
+    - `-c`, `--concurrency` - limit concurrent requests, an optional integer argument
+    - `-p`, `--page-limit` - limit number of pages to crawl, an optional integer argument
     - `-v`, `--verbose` - print CLI report, an optional parameter
     - `--csv` - specifies whether to write a report in a CSV file,
     an optional argument
@@ -18,18 +21,27 @@ def create_parser() -> ArgumentParser:
     # add a positional URL parameter
     parser.add_argument("url")
 
-    # crawling parameters
+    # synchronous mode
     parser.add_argument(
-        "-c",
-        "--concurrency",
-        type=int,
-        help="set a limit for concurrent requests, integer",
+        "-s",
+        "--sync",
+        help="run crawler in synchronous mode",
+        action="store_true",
     )
+
+    # crawling page limit
     parser.add_argument(
         "-p",
         "--page-limit",
         type=int,
         help="set a limit for pages to crawl, integer",
+    )
+    # concurrency limit
+    parser.add_argument(
+        "-c",
+        "--concurrency",
+        type=int,
+        help="set a limit for concurrent requests, integer",
     )
 
     # reporting parameters

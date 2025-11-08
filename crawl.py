@@ -136,6 +136,7 @@ def get_html(url: str) -> str:
 
 def crawl_page(
     base_url: str,
+    max_pages_to_crawl: int,
     current_url: str | None = None,
     page_data: dict[str, dict[str, str | list[str]]] | None = None,
 ) -> dict[str, dict[str, str | list[str]]]:
@@ -145,6 +146,10 @@ def crawl_page(
         current_url = base_url
     if page_data is None:
         page_data = {}
+
+    # check if reached limit of pages to crawl
+    if max_pages_to_crawl and (len(page_data) == max_pages_to_crawl):
+        return page_data
 
     # make sure the current url is on the same domain as the base url
     if urlparse(current_url).netloc != urlparse(base_url).netloc:
@@ -167,7 +172,10 @@ def crawl_page(
     # crawl each URL on the page
     for url in page_data[normalized_url]["outgoing_links"]:
         page_data = crawl_page(
-            base_url=base_url, current_url=url, page_data=page_data
+            base_url=base_url,
+            max_pages_to_crawl=max_pages_to_crawl,
+            current_url=url,
+            page_data=page_data,
         )
 
     return page_data
