@@ -43,7 +43,7 @@ class AsyncCrawler:
 
         async with self.lock:
             # check if reached max pages limit
-            if len(self.page_data) == self.max_pages:
+            if len(self.page_data) >= self.max_pages:
                 self.should_stop = True
                 print("Reached maximum number of pages to crawl.")
                 for task in self.all_tasks:
@@ -114,13 +114,24 @@ class AsyncCrawler:
                     "outgoing_links"
                 ]  # type:ignore
 
+        # inner stop of further crawling if reached maximum crawls
+        # to avoid adding new tasks
+        if self.should_stop:
+            return
+
+        tasks: list[Task] = []
+        # schedule crawling for each URL on the page
+        for url in links:
+            tasks.append((task := asyncio.create_task(self.crawl_page(url))))
+            self.all_tasks.add(task)
+
         try:
-            # schedule crawling for each URL on the page
-            for url in links:
-                self.all_tasks.add(asyncio.create_task(self.crawl_page(url)))
-            await asyncio.gather(*self.all_tasks)
+            await asyncio.gather(*tasks, return_exceptions=True)
         finally:
-            self.all_tasks.clear()
+            # remove tasks of this recursion run from 'global' task set
+            # regardless of gathering result (complete or error)
+            for task in tasks:
+                self.all_tasks.discard(task)
             return
 
     async def crawl(self) -> dict[str, dict[str, str | list[str]]]:
