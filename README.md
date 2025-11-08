@@ -5,6 +5,10 @@
 You can use the default parameters or specify a page crawl limit and the maximum number of asynchronous crawling tasks.
 By default, crawler works in asynchronous mode with a max concurrency set of 3 and a limit of 10 pages to crawl.
 
+Here's an example of crawling [crawler-test.com](https://www.crawler-test.com/) with standard parameters and printing the report in CLI:
+
+![PyVisit Demo](https://github.com/user-attachments/assets/e5268cf2-c4f2-4d0f-a10b-82611bbb87d3)
+
 ## Table of contents
 
 - [Features](#features)
