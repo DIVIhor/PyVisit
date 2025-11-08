@@ -1,6 +1,6 @@
 import unittest
 
-from crawl import (
+from crawler.crawl import (
     normalize_url,
     get_h1_from_html,
     get_first_paragraph_from_html,
